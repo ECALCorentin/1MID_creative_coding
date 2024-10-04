@@ -1,44 +1,55 @@
-import Canvas from "./Canvas.js";
 import Point from "./Point.js";
+import Canvas from "./Canvas.js";
+import Utils from "./Utils.js";
 
 export default class App {
   constructor() {
-    // Create a canvas using our new Canvas class
     const canvas = new Canvas();
-    const ctx = canvas.getContext();
+    this.ctx = canvas.getContext();
+    this.ctx.fillStyle = "black";
+    this.ctx.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
-    // Calculate how many rows and columns of points we can fit
-    const spacing = 20;
-    const columns = Math.floor(canvas.getWidth() / spacing);
-    const rows = Math.floor(canvas.getHeight() / spacing);
+    this.spacing = 50;
+    this.columns = Math.floor(canvas.getWidth() / this.spacing);
+    this.rows = Math.floor(canvas.getHeight() / this.spacing);
 
-    // Create an array to store all our points
-    const points = [];
-    let radius; // tbd in the loop
-    // Create points in a grid
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < columns; col++) {
-        // Calculate the position of each point
-        const x = (col * canvas.getWidth()) / (columns - 1);
-        const y = (row * canvas.getHeight()) / (rows - 1);
+    this.points = [];
+    this.time = 25; // Variable de temps pour animer
 
-        // radius = Utils.calculateRadialGradientRadius(x, y);
-        // radius = Utils.calculateHorizontalGradientRadius(col / (columns - 1));
-        // radius = Utils.calculateVerticalGradientRadius(row / (rows - 1));
-        // radius = Utils.calculateDiagonalGradientRadius(
-        //   col / (columns - 1),
-        //   row / (rows - 1)
-        // );
+    for (let row = 0; row < this.rows; row++) {
+      for (let col = 0; col < this.columns; col++) {
+        const x = (col * canvas.getWidth()) / (this.columns - 1);
+        const y = (row * canvas.getHeight()) / (this.rows - 1);
 
-        // Create a new point and add it to our array
+        let radius = Utils.calculateVerticalGradientRadius(
+          row / (this.rows - 1)
+        );
         const point = new Point(x, y, radius);
-        points.push(point);
+        this.points.push(point);
       }
     }
 
-    // Draw all the points
-    points.forEach((point) => {
-      point.draw(ctx);
-    });
+    this.animate = this.animate.bind(this);
+    requestAnimationFrame(this.animate);
+  }
+
+  animate() {
+    this.ctx.fillStyle = "black";
+    this.ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+
+    this.time += 0.05;
+
+    for (let i = 0; i < this.points.length; i++) {
+      const point = this.points[i];
+
+      const row = Math.floor(i / this.columns);
+      const yRatio = row / (this.rows - 1);
+      const baseRadius = Utils.calculateVerticalGradientRadius(yRatio);
+      point.radius = baseRadius + Math.cos(this.time + row * 0.1) * 10;
+
+      point.draw(this.ctx);
+    }
+
+    requestAnimationFrame(this.animate);
   }
 }
